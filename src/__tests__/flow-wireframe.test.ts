@@ -305,6 +305,50 @@ describe("i18n（lang: ja / en）", () => {
   });
 });
 
+describe("デザインフレームワーク（テーマ・トークン）", () => {
+  it("既定は blueprint テーマで描画される", () => {
+    const html = renderHtml(minimalDef());
+    expect(html).toContain("--paper: #f3f5f7");
+    expect(html).toContain("--given: #64748b");
+  });
+
+  it("theme: mono で全トークンが差し替わる", () => {
+    const def = minimalDef();
+    def.theme = "mono";
+    const html = renderHtml(def);
+    expect(html).toContain("--paper: #f6f6f6");
+    expect(html).toContain("--create: #1a1a1a");
+    expect(html).not.toContain("#2563eb");
+  });
+
+  it("tokens で個別上書きでき、accent は when に連動する", () => {
+    const def = minimalDef();
+    def.accent = "#0d9488";
+    def.tokens = { paper: "#fffdf5" };
+    const html = renderHtml(def);
+    expect(html).toContain("--accent: #0d9488");
+    expect(html).toContain("--when: #0d9488");
+    expect(html).toContain("--paper: #fffdf5");
+  });
+
+  it("存在しないテーマ名・トークンキーを検出する", () => {
+    const def = minimalDef();
+    def.theme = "vaporwave";
+    (def.tokens as Record<string, string>) = { nope: "#000" };
+    const errors = validate(def).errors.join();
+    expect(errors).toContain("vaporwave");
+    expect(errors).toContain("nope");
+  });
+
+  it("意味トークン(given/when/then, CRUD)は全テーマが同じキー構造を持つ", async () => {
+    const { THEMES } = await import("../theme");
+    const keys = Object.keys(THEMES.blueprint).sort();
+    for (const theme of Object.values(THEMES)) {
+      expect(Object.keys(theme).sort()).toEqual(keys);
+    }
+  });
+});
+
 describe("JSON Schema", () => {
   it("schema が有効な JSON で、TypeScript の element type 一覧と一致する", () => {
     const schema = JSON.parse(

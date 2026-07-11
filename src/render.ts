@@ -9,7 +9,7 @@ import type {
   StepData,
 } from "./types";
 import { validate } from "./validate";
-import { buildCss } from "./theme";
+import { buildCss, DEFAULT_THEME, THEMES, type ThemeTokens } from "./theme";
 import { LOCALES, type Locale } from "./i18n";
 
 const CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
@@ -427,6 +427,13 @@ export function renderHtml(def: FlowDefinition, options: RenderOptions = {}): st
   }
 
   const t = LOCALES[def.lang ?? "ja"];
+  const baseTheme = THEMES[def.theme ?? DEFAULT_THEME];
+  const themeTokens: ThemeTokens = { ...baseTheme, ...(def.tokens ?? {}) };
+  if (def.accent) {
+    themeTokens.accent = def.accent;
+    // when（操作）の既定はアクセント連動。明示上書きがなければ揃える
+    if (!def.tokens?.when && baseTheme.when === baseTheme.accent) themeTokens.when = def.accent;
+  }
   const screensById = new Map(def.screens.map((s) => [s.id, s]));
   const entitiesById = new Map((def.entities ?? []).map((e) => [e.id, e]));
   const flowsByScreen = (screenId: string) =>
@@ -450,7 +457,7 @@ export function renderHtml(def: FlowDefinition, options: RenderOptions = {}): st
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${esc(def.title)}</title>
-<style>${buildCss(def.accent)}</style>
+<style>${buildCss(themeTokens)}</style>
 </head>
 <body>
 <header class="wf-doc-header">

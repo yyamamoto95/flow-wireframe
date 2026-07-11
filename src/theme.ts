@@ -1,22 +1,112 @@
 /**
- * 出力 HTML に埋め込む CSS。
- * 外部フォント・外部リソースへの参照を持たず、file:// 直開きでも完全に動作する。
+ * デザインフレームワーク。
+ *
+ * 3層構造:
+ *   1. テーマプリセット（THEMES）      — 資料全体の世界観
+ *   2. トークン上書き（定義の tokens） — プロジェクト固有の調整
+ *   3. 意味トークン                    — ふるまい（given/when/then）とデータ（create/read/update/delete）の色。
+ *      どのテーマでも「同じ意味は同じトークン」を通るため、読者の学習が資料間で転移する。
+ *
+ * 出力 CSS は外部フォント・外部リソースへの参照を持たず、file:// 直開きでも完全に動作する。
  * 印刷（A4）にも配慮する。
  */
-export function buildCss(accent = "#2563eb"): string {
+
+/** デザイントークン。すべて CSS カラー値 */
+export interface ThemeTokens {
+  /** 基調 */
+  accent: string;
+  ink: string;
+  muted: string;
+  line: string;
+  hairline: string;
+  paper: string;
+  surface: string;
+  grid: string;
+  sketch: string;
+  good: string;
+  caution: string;
+  /** 意味トークン: ふるまい（Gherkin） */
+  given: string;
+  when: string;
+  then: string;
+  /** 意味トークン: データ（CRUD） */
+  create: string;
+  read: string;
+  update: string;
+  delete: string;
+}
+
+export type TokenName = keyof ThemeTokens;
+
+/** テーマプリセット */
+export const THEMES: Record<string, ThemeTokens> = {
+  /** 製図（既定）: 方眼紙とインクの設計図 */
+  blueprint: {
+    accent: "#2563eb",
+    ink: "#232a31",
+    muted: "#5d6773",
+    line: "#d5dbe1",
+    hairline: "#e4e9ee",
+    paper: "#f3f5f7",
+    surface: "#ffffff",
+    grid: "rgba(35, 42, 49, .045)",
+    sketch: "#9aa4ad",
+    good: "#0b7a58",
+    caution: "#b45309",
+    given: "#64748b",
+    when: "#2563eb",
+    then: "#0b7a58",
+    create: "#0b7a58",
+    read: "#5d6773",
+    update: "#1d4ed8",
+    delete: "#b91c1c",
+  },
+  /** 白黒印刷・複合機向け: 色に依存せず文字（C/R/U/D・前提/操作/結果）で意味が立つ */
+  mono: {
+    accent: "#1a1a1a",
+    ink: "#1a1a1a",
+    muted: "#525252",
+    line: "#c9c9c9",
+    hairline: "#e3e3e3",
+    paper: "#f6f6f6",
+    surface: "#ffffff",
+    grid: "rgba(0, 0, 0, .04)",
+    sketch: "#9a9a9a",
+    good: "#1a1a1a",
+    caution: "#1a1a1a",
+    given: "#6f6f6f",
+    when: "#1a1a1a",
+    then: "#3d3d3d",
+    create: "#1a1a1a",
+    read: "#6f6f6f",
+    update: "#3d3d3d",
+    delete: "#1a1a1a",
+  },
+};
+
+export const DEFAULT_THEME = "blueprint";
+
+export function buildCss(t: ThemeTokens): string {
   return `
 :root {
-  --accent: ${accent};
-  --ink: #232a31;          /* 製図インク: 青みの近黒 */
-  --muted: #5d6773;
-  --line: #d5dbe1;
-  --hairline: #e4e9ee;
-  --paper: #f3f5f7;        /* 方眼紙の地: クールグレー */
-  --surface: #ffffff;
-  --grid: rgba(35, 42, 49, .045);
-  --sketch: #9aa4ad;
-  --good: #0b7a58;
-  --caution: #b45309;
+  --accent: ${t.accent};
+  --ink: ${t.ink};
+  --muted: ${t.muted};
+  --line: ${t.line};
+  --hairline: ${t.hairline};
+  --paper: ${t.paper};
+  --surface: ${t.surface};
+  --grid: ${t.grid};
+  --sketch: ${t.sketch};
+  --good: ${t.good};
+  --caution: ${t.caution};
+  --given: ${t.given};
+  --when: ${t.when};
+  --then: ${t.then};
+  --create: ${t.create};
+  --read: ${t.read};
+  --update: ${t.update};
+  --delete: ${t.delete};
 }
 * { box-sizing: border-box; }
 body {
@@ -107,10 +197,10 @@ h3 { font-size: 16px; letter-spacing: .01em; }
 .wf-step { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; gap: 6px; }
 .wf-data-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 216px; }
 .wf-data-chip { display: inline-block; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 1px 8px; text-decoration: none; border: 1px solid; }
-.wf-data-create { background: #ecfdf5; color: #047857; border-color: #047857; }
-.wf-data-read { background: #f3f4f6; color: #4b5563; border-color: #9ca3af; }
-.wf-data-update { background: #eff6ff; color: #1d4ed8; border-color: #1d4ed8; }
-.wf-data-delete { background: #fef2f2; color: #b91c1c; border-color: #b91c1c; }
+.wf-data-create { background: color-mix(in srgb, var(--create) 9%, var(--surface)); color: var(--create); border-color: var(--create); }
+.wf-data-read { background: color-mix(in srgb, var(--read) 8%, var(--surface)); color: var(--read); border-color: var(--read); }
+.wf-data-update { background: color-mix(in srgb, var(--update) 9%, var(--surface)); color: var(--update); border-color: var(--update); }
+.wf-data-delete { background: color-mix(in srgb, var(--delete) 9%, var(--surface)); color: var(--delete); border-color: var(--delete); }
 
 /* データカタログ・CRUDマトリクス・用語集 */
 .wf-crud-note { color: var(--muted); font-size: 13px; }
@@ -148,14 +238,14 @@ h3 { font-size: 16px; letter-spacing: .01em; }
 .wf-gherkin table { border-collapse: collapse; margin-top: 8px; width: 100%; }
 .wf-gherkin th { width: 56px; text-align: center; font-size: 12px; color: #fff; border-radius: 4px; padding: 2px 6px; }
 .wf-gherkin td { padding: 3px 10px; border-bottom: 1px dashed var(--line); }
-.wf-gherkin-given th { background: #64748b; }
-.wf-gherkin-when th { background: var(--accent); }
-.wf-gherkin-then th { background: var(--good); }
+.wf-gherkin-given th { background: var(--given); }
+.wf-gherkin-when th { background: var(--when); }
+.wf-gherkin-then th { background: var(--then); }
 
 /* 画面カタログ */
 .wf-screen-note { color: var(--muted); font-size: 14px; margin-top: 0; }
 .wf-screen-flows { font-size: 12px; }
-.wf-tag { display: inline-block; background: #eef2ff; color: var(--accent); border-radius: 999px; padding: 1px 10px; text-decoration: none; margin: 2px; }
+.wf-tag { display: inline-block; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--accent); border-radius: 999px; padding: 1px 10px; text-decoration: none; margin: 2px; }
 .wf-screen-section:target { outline: 3px solid var(--accent); animation: wf-flash 1.2s ease-out 1; }
 @keyframes wf-flash { from { background: #dbeafe; } to { background: #fff; } }
 
@@ -196,9 +286,9 @@ h3 { font-size: 16px; letter-spacing: .01em; }
 .wf-image { border: 1.5px dashed var(--sketch); border-radius: 8px; min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--sketch); font-size: 12px; }
 .wf-image svg { width: 28px; height: 28px; }
 .wf-badge { display: inline-block; align-self: flex-start; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 10px; }
-.wf-badge-good { background: #ecfdf5; color: var(--good); border: 1px solid var(--good); }
-.wf-badge-caution { background: #fffbeb; color: var(--caution); border: 1px solid var(--caution); }
-.wf-badge-neutral { background: #f3f4f6; color: var(--muted); border: 1px solid var(--line); }
+.wf-badge-good { background: color-mix(in srgb, var(--good) 9%, var(--surface)); color: var(--good); border: 1px solid var(--good); }
+.wf-badge-caution { background: color-mix(in srgb, var(--caution) 10%, var(--surface)); color: var(--caution); border: 1px solid var(--caution); }
+.wf-badge-neutral { background: color-mix(in srgb, var(--muted) 7%, var(--surface)); color: var(--muted); border: 1px solid var(--line); }
 .wf-choice-items { display: flex; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; }
 .wf-choice-item { flex: 1; text-align: center; font-size: 12px; padding: 6px 4px; border-right: 1px solid var(--line); }
 .wf-choice-item:last-child { border-right: none; }

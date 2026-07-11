@@ -37,6 +37,74 @@
       "type": "string",
       "description": "アクセントカラー（CSSカラー値）"
     },
+    "theme": {
+      "enum": [
+        "blueprint",
+        "mono"
+      ],
+      "description": "テーマプリセット。blueprint=製図(既定) / mono=白黒印刷向け"
+    },
+    "tokens": {
+      "type": "object",
+      "description": "テーマのデザイントークンを個別上書き(CSSカラー値)",
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "type": "string"
+        },
+        "ink": {
+          "type": "string"
+        },
+        "muted": {
+          "type": "string"
+        },
+        "line": {
+          "type": "string"
+        },
+        "hairline": {
+          "type": "string"
+        },
+        "paper": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "grid": {
+          "type": "string"
+        },
+        "sketch": {
+          "type": "string"
+        },
+        "good": {
+          "type": "string"
+        },
+        "caution": {
+          "type": "string"
+        },
+        "given": {
+          "type": "string"
+        },
+        "when": {
+          "type": "string"
+        },
+        "then": {
+          "type": "string"
+        },
+        "create": {
+          "type": "string"
+        },
+        "read": {
+          "type": "string"
+        },
+        "update": {
+          "type": "string"
+        },
+        "delete": {
+          "type": "string"
+        }
+      }
+    },
     "screens": {
       "type": "array",
       "minItems": 1,

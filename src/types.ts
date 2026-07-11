@@ -246,7 +246,11 @@ export interface FlowDefinition {
   description?: string;
   /** 定義自体のバージョン。出力 HTML に表示される */
   version?: string;
-  /** アクセントカラー（CSS カラー値）。省略時は既定のインクブルー */
+  /** テーマプリセット名（"blueprint"=製図(既定) / "mono"=白黒印刷向け） */
+  theme?: string;
+  /** テーマのトークンを個別に上書きする（キーは theme.ts の ThemeTokens 参照） */
+  tokens?: Partial<import("./theme").ThemeTokens>;
+  /** アクセントカラー（CSS カラー値）。tokens.accent の簡易記法 */
   accent?: string;
   screens: Screen[];
   flows: Flow[];

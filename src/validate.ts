@@ -1,4 +1,5 @@
 import type { FlowDefinition } from "./types";
+import { THEMES } from "./theme";
 
 export interface ValidationResult {
   ok: boolean;
@@ -24,6 +25,20 @@ export function validate(def: FlowDefinition): ValidationResult {
   }
   if (errors.length > 0) {
     return { ok: false, errors };
+  }
+
+  if (def.theme && !THEMES[def.theme]) {
+    errors.push(
+      `テーマ「${def.theme}」は存在しません。使用可能: ${Object.keys(THEMES).join(" / ")}`
+    );
+  }
+  const validTokens = new Set(Object.keys(THEMES.blueprint));
+  for (const key of Object.keys(def.tokens ?? {})) {
+    if (!validTokens.has(key)) {
+      errors.push(
+        `tokens のキー「${key}」は存在しません。使用可能: ${[...validTokens].join(", ")}`
+      );
+    }
   }
 
   const screenIds = new Set<string>();
