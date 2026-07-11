@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: 型チェック・テスト・ビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 型チェック
+        run: pnpm type-check
+
+      - name: ユニットテスト
+        run: pnpm test:unit
+
+      - name: ビルドと CLI の動作確認
+        run: |
+          pnpm build
+          node dist/cli.js check examples/kakeibo.flow.json
+
+      - name: 生成物が定義と同期しているか検証（決定的レンダリング）
+        run: |
+          node dist/cli.js build examples/kakeibo.flow.json -o examples/kakeibo.wireframe.html
+          git diff --exit-code examples/ || {
+            echo "::error::examples/ の生成HTMLが定義と同期していません。pnpm example を実行してコミットしてください"
+            exit 1
+          }

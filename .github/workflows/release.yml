@@ -1,0 +1,56 @@
+# v{version} 形式のタグを push すると npm に公開する。
+# 前提: リポジトリ Secrets に NPM_TOKEN（npm Automation トークン）を設定すること。
+# 手順: CONTRIBUTING.md「リリース手順」を参照
+
+name: Release to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # npm provenance（来歴証明）用
+
+jobs:
+  publish:
+    name: テスト・ビルドして npm に公開する
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: タグとpackage.jsonのバージョン一致を検証する
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::タグ ($TAG_VERSION) と package.json ($PKG_VERSION) のバージョンが一致しません"
+            exit 1
+          fi
+
+      - name: 型チェック・テスト・ビルド
+        run: |
+          pnpm type-check
+          pnpm test:unit
+          pnpm build
+
+      - name: npm publish
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
