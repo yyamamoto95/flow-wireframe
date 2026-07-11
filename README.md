@@ -107,7 +107,7 @@ npx flow-wireframe build docs/flow.json    # docs/flow.html が生成される
 
 ```jsonc
 {
-  "theme": "blueprint",              // ① プリセット: blueprint=製図(既定) / mono=白黒印刷向け
+  "theme": "plain",                  // ① プリセット: plain=無地(既定) / blueprint=製図(方眼) / mono=白黒印刷向け
   "accent": "#0d9488",               // ② 簡易上書き（tokens.accent の別名。when 色も連動）
   "tokens": { "paper": "#fffdf5" }   // ② トークン単位の上書き（全18トークン）
 }
@@ -115,7 +115,7 @@ npx flow-wireframe build docs/flow.json    # docs/flow.html が生成される
 
 | 層 | 役割 |
 |----|------|
-| ① テーマプリセット | 資料全体の世界観。`blueprint`（方眼紙＋製図インク）と `mono`（白黒複合機・グレースケール印刷に最適） |
+| ① テーマプリセット | 資料全体の世界観。`plain`（無地のニュートラル・既定。claude.ai/design で設計）/ `blueprint`（方眼紙＋製図インク）/ `mono`（白黒複合機・グレースケール印刷に最適） |
 | ② トークン上書き | プロジェクトのブランド色への調整。基調 11 トークン（paper / ink / line …） |
 | ③ **意味トークン** | `given / when / then`（ふるまい）と `create / read / update / delete`（データ）。**どのテーマでも「同じ意味は同じトークン」を通る**ため、ふるまい表とデータチップの読み方が資料間・テーマ間で変わらない |
 

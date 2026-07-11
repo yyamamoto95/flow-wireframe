@@ -306,10 +306,19 @@ describe("i18n（lang: ja / en）", () => {
 });
 
 describe("デザインフレームワーク（テーマ・トークン）", () => {
-  it("既定は blueprint テーマで描画される", () => {
+  it("既定は plain テーマ（claude.ai/design 再設計）で描画される", () => {
     const html = renderHtml(minimalDef());
+    expect(html).toContain("--paper: #f6f7f9");
+    expect(html).toContain("--given: #6e7680");
+    expect(html).toContain("--delete: #8a1b15");
+  });
+
+  it("blueprint テーマ（方眼）はプリセットとして選択できる", () => {
+    const def = minimalDef();
+    def.theme = "blueprint";
+    const html = renderHtml(def);
     expect(html).toContain("--paper: #f3f5f7");
-    expect(html).toContain("--given: #64748b");
+    expect(html).toContain("--grid: rgba(35, 42, 49, .045)");
   });
 
   it("theme: mono で全トークンが差し替わる", () => {

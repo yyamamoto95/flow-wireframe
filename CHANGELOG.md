@@ -2,6 +2,25 @@
 
 本パッケージの変更履歴。[Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [0.7.0] - 2026-07-11
+
+claude.ai/design（Claude Design）で設計されたテーマ案「plain」を取り込み、既定テーマに採用。
+デザインの探索は Claude Design、実装への還元は 18 トークン+CSS差分、という受け渡しフローの初適用。
+
+### Added
+
+- テーマプリセット `plain`（新既定）— 装飾を全廃した無地のニュートラル。罫線とタイポグラフィだけで
+  階層を作り、CRUD は明度階段 read > create > update > delete で白黒でも順序が残る
+
+### Changed
+
+- 図番チップ（フローID・画面ID）とステップ番号を塗りつぶし→枠線のスタンプ風へ（背景を印刷しない設定でも消えない）
+- Gherkin 行ラベルを白抜き→「色文字+枠線」へ（同上）
+- 残っていたハードコード色を全てトークン化（frame/card/буttons/browser-bar/chart/process 等）。
+  danger ボタンは --delete トークンに統合
+- 印刷フォールバックを追加（primary ボタン・選択タブ/ナビに print-color-adjust と枠線・下線の保険）
+- 既定テーマは `blueprint`（方眼）から `plain` へ。blueprint・mono はプリセットとして選択可
+
 ## [0.6.0] - 2026-07-11
 
 見た目を1回きりのCSSから「デザインフレームワーク」に昇格。再現性（定義に書く）と、
