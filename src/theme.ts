@@ -90,6 +90,38 @@ h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48
 /* 外部サービスへの遷移マーク */
 .wf-external { margin-left: 4px; font-weight: 700; }
 
+/* ステップ(ノード+データ変化チップ) */
+.wf-step { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; gap: 6px; }
+.wf-data-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 216px; }
+.wf-data-chip { display: inline-block; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 1px 8px; text-decoration: none; border: 1px solid; }
+.wf-data-create { background: #ecfdf5; color: #047857; border-color: #047857; }
+.wf-data-read { background: #f3f4f6; color: #4b5563; border-color: #9ca3af; }
+.wf-data-update { background: #eff6ff; color: #1d4ed8; border-color: #1d4ed8; }
+.wf-data-delete { background: #fef2f2; color: #b91c1c; border-color: #b91c1c; }
+
+/* データカタログ・CRUDマトリクス・用語集 */
+.wf-crud-note { color: var(--muted); font-size: 13px; }
+.wf-crud-wrap { overflow-x: auto; }
+.wf-crud { border-collapse: collapse; background: #fff; font-size: 13px; }
+.wf-crud th, .wf-crud td { border: 1px solid var(--line); padding: 6px 12px; text-align: left; }
+.wf-crud td { text-align: center; min-width: 72px; }
+.wf-crud td .wf-data-chip { margin: 0 2px; padding: 1px 6px; }
+.wf-crud a { color: var(--ink); text-decoration: none; }
+.wf-crud a:hover { color: var(--accent); }
+.wf-entity { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 16px 0; scroll-margin-top: 16px; }
+.wf-entity:target { outline: 3px solid var(--accent); animation: wf-flash 1.2s ease-out 1; }
+.wf-entity h4 { margin: 4px 0 8px; font-size: 15px; }
+.wf-entity-table { margin-left: 10px; font-size: 12px; font-weight: 400; background: #f3f4f6; border: 1px solid var(--line); border-radius: 4px; padding: 1px 8px; }
+.wf-entity-cols { border-collapse: collapse; font-size: 13px; margin: 6px 0; }
+.wf-entity-cols th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 400; padding: 2px 14px 2px 0; border-bottom: 1px solid var(--line); }
+.wf-entity-cols td { padding: 3px 14px 3px 0; border-bottom: 1px dashed var(--line); }
+.wf-col-name { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.wf-glossary-section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 20px; }
+.wf-glossary { border-collapse: collapse; font-size: 14px; width: 100%; }
+.wf-glossary th { text-align: left; white-space: nowrap; padding: 8px 18px 8px 0; vertical-align: top; }
+.wf-glossary td { padding: 8px 12px 8px 0; border-bottom: 1px dashed var(--line); color: var(--ink); }
+.wf-glossary tr:last-child td { border-bottom: none; }
+
 /* ステップ間の矢印 */
 .wf-arrow { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; justify-content: center; min-width: 110px; max-width: 160px; text-align: center; padding: 0 6px; }
 .wf-arrow-action { font-size: 12px; font-weight: 700; color: var(--ink); }

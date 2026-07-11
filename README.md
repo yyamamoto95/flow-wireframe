@@ -2,6 +2,8 @@
 
 **業務フロー定義（JSON 1ファイル）から、非エンジニアにも読める静的 HTML ワイヤーフレーム（1ファイル）を生成する**ライブラリ / CLI。
 
+**ふるまい（BDD）・画面（UI）・ことば（ユビキタス言語）・データ（テーブル）を1本の ID で貫いた Living Documentation** を目指している。企画・営業・PO・エンジニアが同じ1枚で「この操作をすると、画面とデータがどう変わるか」まで話せる。
+
 > **English**: flow-wireframe turns a single JSON definition of your user flows into a single
 > self-contained static HTML wireframe — no JavaScript, no external resources, deterministic
 > output. Designed for BDD teams: each flow carries a traceability ID and a Gherkin
@@ -98,6 +100,30 @@ npx flow-wireframe build docs/flow.json    # docs/flow.html が生成される
 | 家計簿アプリ | モバイル UI・BDD ストーリー駆動 | スマホ枠、Gherkin 表、注釈、nav 遷移 |
 | Tech Blog Aggregator | デスクトップ UI・自動化パイプライン | ブラウザ枠(`layout: desktop`)、処理ステップ(`process`)、外部リンク(`external`) |
 | create-dev-framework | CLI ツール・スプリント運用 | 端末枠(`layout: terminal`)、コンソール部品(`console`) |
+
+## ことば・データの層（ユビキタス言語と CRUD）
+
+`glossary`（用語集）・`entities`（ビジネス用語⇔テーブルの写像）・ステップの `data`（データ変化）を書くと、
+フロー中に色分けチップ（作成・参照・更新・削除）が付き、巻末に **CRUD マトリクス**・**データカタログ**・**用語集**が自動生成される。
+
+```jsonc
+{
+  "entities": [
+    { "id": "record", "name": "記録", "table": "budget_list",
+      "columns": [{ "name": "amount", "label": "金額" }] }
+  ],
+  "glossary": [
+    { "term": "生活余力", "definition": "総資産が実効支出の何ヶ月分あるか", "entity": "settings" }
+  ],
+  "flows": [{ "steps": [{
+    "screen": "quick-record", "action": "登録する",
+    "data": [{ "entity": "record", "change": "create", "note": "明細が1行増える" }]
+  }] }]
+}
+```
+
+**スキーマの SSOT は実装側（Prisma 等）に置く。** ここに書くのはビジネス用語との写像であり、
+実スキーマとの自動突合（乖離の CI 検知）は今後 `check --schema` として提供予定。
 
 ## 定義ファイルの構造
 

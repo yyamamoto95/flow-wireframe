@@ -173,6 +173,8 @@ export interface FlowStep {
   action?: string;
   /** 操作に対するシステムの応答・特記事項 */
   result?: string;
+  /** このステップでデータ（テーブル）がどう変わるか */
+  data?: StepData[];
 }
 
 /** 業務フロー（ユーザーストーリー単位） */
@@ -185,6 +187,53 @@ export interface Flow {
   description?: string;
   scenario?: Scenario;
   steps: FlowStep[];
+}
+
+/** ユビキタス言語の用語（ことばの層） */
+export interface GlossaryTerm {
+  term: string;
+  definition: string;
+  /** この用語が対応するエンティティ ID（entities を参照） */
+  entity?: string;
+}
+
+/** エンティティのカラム（ビジネス用語との対応付き） */
+export interface EntityColumn {
+  /** 物理カラム名 */
+  name: string;
+  /** ビジネス上の呼び名（例: "金額"） */
+  label?: string;
+  note?: string;
+}
+
+/**
+ * エンティティ（データの層）。
+ * ビジネス用語（name）と物理テーブル（table）の写像を宣言する。
+ * スキーマの SSOT はあくまで実装側（Prisma 等）にあり、ここはその写しである。
+ */
+export interface Entity {
+  /** step.data から参照される一意な ID */
+  id: string;
+  /** ビジネス用語（ユビキタス言語）での名前（例: "記録"） */
+  name: string;
+  /** 物理テーブル名（例: "budget_list"） */
+  table?: string;
+  note?: string;
+  columns?: EntityColumn[];
+}
+
+/** データの変化の種類（CRUD） */
+export type DataChange = "create" | "read" | "update" | "delete";
+
+/** ステップがデータに与える影響 */
+export interface StepData {
+  /** entities の ID */
+  entity: string;
+  change: DataChange;
+  /** 影響するカラム（entities.columns の name） */
+  columns?: string[];
+  /** 非エンジニア向けの補足（例: "明細が1行増える"） */
+  note?: string;
 }
 
 /** フロー定義全体 */
@@ -201,6 +250,10 @@ export interface FlowDefinition {
   accent?: string;
   screens: Screen[];
   flows: Flow[];
+  /** ユビキタス言語の用語集（ことばの層）。省略可 */
+  glossary?: GlossaryTerm[];
+  /** ビジネス用語とテーブルの写像（データの層）。省略可 */
+  entities?: Entity[];
 }
 
 /** レンダリングオプション */

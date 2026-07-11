@@ -61,6 +61,25 @@ export function validate(def: FlowDefinition): ValidationResult {
     }
   }
 
+  const entityIds = new Set<string>();
+  for (const entity of def.entities ?? []) {
+    if (!entity.id) {
+      errors.push(`エンティティ「${entity.name ?? "(名称未設定)"}」に id がありません`);
+      continue;
+    }
+    if (entityIds.has(entity.id)) {
+      errors.push(`エンティティ ID「${entity.id}」が重複しています`);
+    }
+    entityIds.add(entity.id);
+  }
+  for (const term of def.glossary ?? []) {
+    if (term.entity && !entityIds.has(term.entity)) {
+      errors.push(
+        `用語「${term.term}」が参照するエンティティ「${term.entity}」が entities に存在しません`
+      );
+    }
+  }
+
   const flowIds = new Set<string>();
   for (const flow of def.flows) {
     if (!flow.id) {
@@ -88,6 +107,22 @@ export function validate(def: FlowDefinition): ValidationResult {
         errors.push(
           `フロー「${flow.id}」の手順${i + 1}が参照する画面「${step.screen}」が screens に存在しません`
         );
+      }
+      for (const d of step.data ?? []) {
+        const entity = (def.entities ?? []).find((e) => e.id === d.entity);
+        if (!entity) {
+          errors.push(
+            `フロー「${flow.id}」の手順${i + 1}の data が参照するエンティティ「${d.entity}」が entities に存在しません`
+          );
+        } else {
+          for (const col of d.columns ?? []) {
+            if (!(entity.columns ?? []).some((c) => c.name === col)) {
+              errors.push(
+                `フロー「${flow.id}」の手順${i + 1}の data が参照するカラム「${col}」がエンティティ「${d.entity}」の columns に存在しません`
+              );
+            }
+          }
+        }
       }
       if (i < flow.steps.length - 1 && !step.action) {
         errors.push(

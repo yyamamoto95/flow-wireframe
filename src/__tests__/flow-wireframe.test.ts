@@ -197,6 +197,66 @@ describe("v0.3 の汎用化機能（CLIドメイン）", () => {
   });
 });
 
+describe("v0.5 ことば・データの層", () => {
+  const defWithData = () => {
+    const def = minimalDef();
+    def.entities = [
+      { id: "record", name: "記録", table: "budget_list",
+        columns: [{ name: "amount", label: "金額" }, { name: "category_id", label: "カテゴリ" }] },
+      { id: "settings", name: "ユーザー設定", table: "user_settings" },
+    ];
+    def.glossary = [
+      { term: "生活余力", definition: "総資産が実効支出の何ヶ月分あるかを示す値", entity: "settings" },
+    ];
+    def.flows[0].steps[0].data = [
+      { entity: "record", change: "create", columns: ["amount"], note: "明細が1行増える" },
+      { entity: "settings", change: "read" },
+    ];
+    return def;
+  };
+
+  it("ステップにデータ変化チップが描画される", () => {
+    const html = renderHtml(defWithData());
+    expect(html).toContain("wf-data-chip");
+    expect(html).toContain("wf-data-create");
+    expect(html).toContain("作成: 記録");
+    expect(html).toContain('href="#entity-record"');
+  });
+
+  it("CRUDマトリクスとデータカタログ・用語集が生成される", () => {
+    const html = renderHtml(defWithData());
+    expect(html).toContain("CRUD マトリクス");
+    expect(html).toContain('id="entity-record"');
+    expect(html).toContain("budget_list");
+    expect(html).toContain("用語集（ユビキタス言語）");
+    expect(html).toContain("生活余力");
+  });
+
+  it("entities がない定義では従来通り（データ系セクションなし）", () => {
+    const html = renderHtml(minimalDef());
+    expect(html).not.toContain('id="data"');
+    expect(html).not.toContain('id="glossary"');
+    expect(html).not.toContain('<table class="wf-crud"');
+  });
+
+  it("存在しないエンティティ・カラムへの参照を検出する", () => {
+    const def = defWithData();
+    def.flows[0].steps[0].data!.push({ entity: "ghost", change: "read" });
+    def.flows[0].steps[0].data!.push({ entity: "record", change: "update", columns: ["nope"] });
+    const errors = validate(def).errors.join();
+    expect(errors).toContain("ghost");
+    expect(errors).toContain("nope");
+  });
+
+  it("lang: en では CRUD 見出しも英語になる", () => {
+    const def = defWithData();
+    def.lang = "en";
+    const html = renderHtml(def);
+    expect(html).toContain("CRUD matrix");
+    expect(html).toContain("Create: 記録");
+  });
+});
+
 describe("i18n（lang: ja / en）", () => {
   it("既定は日本語で描画される", () => {
     const html = renderHtml(minimalDef());

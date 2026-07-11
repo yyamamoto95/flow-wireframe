@@ -1,10 +1,12 @@
 import type {
+  Entity,
   Flow,
   FlowDefinition,
   FlowStep,
   RenderOptions,
   Screen,
   ScreenElement,
+  StepData,
 } from "./types";
 import { validate } from "./validate";
 import { buildCss } from "./theme";
@@ -224,6 +226,24 @@ function renderProcessNode(step: FlowStep, stepNo: number, defaultActor?: string
   );
 }
 
+/** ステップ下に表示するデータ変化チップ */
+function renderDataChips(
+  data: StepData[] | undefined,
+  entitiesById: Map<string, Entity>,
+  t: Locale
+): string {
+  if (!data || data.length === 0) return "";
+  const chips = data
+    .map((d) => {
+      const entity = entitiesById.get(d.entity);
+      const name = entity?.name ?? d.entity;
+      const title = d.note ?? (entity?.table ? `${t.tableWord}: ${entity.table}` : "");
+      return `<a class="wf-data-chip wf-data-${d.change}" href="#entity-${esc(d.entity)}"${title ? ` title="${esc(title)}"` : ""}>${esc(t.changes[d.change])}: ${esc(name)}</a>`;
+    })
+    .join("");
+  return `<span class="wf-data-chips">${chips}</span>`;
+}
+
 function renderScenario(flow: Flow, t: Locale): string {
   if (!flow.scenario) return "";
   const row = (kind: string, label: string, lines: string[]) =>
@@ -242,7 +262,7 @@ function renderScenario(flow: Flow, t: Locale): string {
   );
 }
 
-function renderFlowSection(flow: Flow, screensById: Map<string, Screen>, t: Locale): string {
+function renderFlowSection(flow: Flow, screensById: Map<string, Screen>, entitiesById: Map<string, Entity>, t: Locale): string {
   const strip = flow.steps
     .map((step, i) => {
       let node = "";
@@ -252,6 +272,8 @@ function renderFlowSection(flow: Flow, screensById: Map<string, Screen>, t: Loca
       } else if (step.process) {
         node = renderProcessNode(step, i + 1, flow.actor);
       }
+      const chips = renderDataChips(step.data, entitiesById, t);
+      if (node) node = `<span class="wf-step">${node}${chips}</span>`;
       const isLast = i === flow.steps.length - 1;
       const arrow = !isLast
         ? `<span class="wf-arrow"><span class="wf-arrow-action">${esc(step.action ?? "")}</span>` +
@@ -296,6 +318,88 @@ function renderToc(def: FlowDefinition, t: Locale): string {
   );
 }
 
+/** 用語集セクション */
+function renderGlossary(def: FlowDefinition, entitiesById: Map<string, Entity>, t: Locale): string {
+  if (!def.glossary || def.glossary.length === 0) return "";
+  const rows = def.glossary
+    .map((g) => {
+      const entity = g.entity ? entitiesById.get(g.entity) : undefined;
+      const link = entity
+        ? `<a class="wf-tag" href="#entity-${esc(entity.id)}">${esc(entity.name)}${entity.table ? ` (${esc(entity.table)})` : ""}</a>`
+        : "";
+      return `<tr><th>${esc(g.term)}</th><td>${esc(g.definition)}</td><td>${link}</td></tr>`;
+    })
+    .join("");
+  return (
+    `<h2 id="glossary">${esc(t.glossaryHeading)}</h2>` +
+    `<section class="wf-glossary-section"><table class="wf-glossary">${rows}</table></section>`
+  );
+}
+
+const CRUD_ORDER = ["create", "read", "update", "delete"] as const;
+const CRUD_LETTER = { create: "C", read: "R", update: "U", delete: "D" } as const;
+
+/** CRUD マトリクス（フロー × エンティティ） */
+function renderCrudMatrix(def: FlowDefinition, t: Locale): string {
+  const entities = def.entities ?? [];
+  const header = entities
+    .map((e) => `<th><a href="#entity-${esc(e.id)}">${esc(e.name)}</a></th>`)
+    .join("");
+  const rows = def.flows
+    .map((f) => {
+      const cells = entities
+        .map((e) => {
+          const changes = new Set(
+            f.steps.flatMap((st) => (st.data ?? []).filter((d) => d.entity === e.id).map((d) => d.change))
+          );
+          const letters = CRUD_ORDER.filter((c) => changes.has(c))
+            .map((c) => `<span class="wf-data-chip wf-data-${c}" title="${esc(t.changes[c])}">${CRUD_LETTER[c]}</span>`)
+            .join("");
+          return `<td>${letters}</td>`;
+        })
+        .join("");
+      return `<tr><th><a href="#flow-${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a></th>${cells}</tr>`;
+    })
+    .join("");
+  return (
+    `<h3>${esc(t.crudHeading)}</h3><p class="wf-crud-note">${esc(t.crudNote)}</p>` +
+    `<div class="wf-crud-wrap"><table class="wf-crud"><thead><tr><th></th>${header}</tr></thead><tbody>${rows}</tbody></table></div>`
+  );
+}
+
+/** データカタログ（エンティティごとのカード） */
+function renderDataCatalog(def: FlowDefinition, t: Locale): string {
+  const entities = def.entities ?? [];
+  if (entities.length === 0) return "";
+  const usedBy = (entityId: string) =>
+    def.flows.filter((f) => f.steps.some((st) => (st.data ?? []).some((d) => d.entity === entityId)));
+  const cards = entities
+    .map((e) => {
+      const cols = (e.columns ?? [])
+        .map(
+          (c) =>
+            `<tr><td class="wf-col-name">${esc(c.name)}</td><td>${esc(c.label ?? "")}</td><td>${esc(c.note ?? "")}</td></tr>`
+        )
+        .join("");
+      const colTable = cols
+        ? `<table class="wf-entity-cols"><thead><tr><th>${esc(t.columnWord)}</th><th>${esc(t.columnBizName)}</th><th></th></tr></thead><tbody>${cols}</tbody></table>`
+        : "";
+      const flows = usedBy(e.id)
+        .map((f) => `<a class="wf-tag" href="#flow-${esc(f.id)}">${esc(f.id)}</a>`)
+        .join(" ");
+      return (
+        `<section class="wf-entity" id="entity-${esc(e.id)}">` +
+        `<h4>${esc(e.name)}${e.table ? `<code class="wf-entity-table">${esc(e.table)}</code>` : ""}</h4>` +
+        (e.note ? `<p class="wf-screen-note">${esc(e.note)}</p>` : "") +
+        colTable +
+        (flows ? `<p class="wf-screen-flows">${esc(t.appearsIn)}: ${flows}</p>` : "") +
+        `</section>`
+      );
+    })
+    .join("");
+  return `<h2 id="data">${esc(t.dataHeading)}</h2>${renderCrudMatrix(def, t)}${cards}`;
+}
+
 /**
  * フロー定義から自己完結型の静的 HTML（1ファイル・JS なし）を生成する。
  * 定義が不正な場合は、全エラーをまとめた Error を投げる。
@@ -308,10 +412,11 @@ export function renderHtml(def: FlowDefinition, options: RenderOptions = {}): st
 
   const t = LOCALES[def.lang ?? "ja"];
   const screensById = new Map(def.screens.map((s) => [s.id, s]));
+  const entitiesById = new Map((def.entities ?? []).map((e) => [e.id, e]));
   const flowsByScreen = (screenId: string) =>
     def.flows.filter((f) => f.steps.some((st) => st.screen === screenId));
 
-  const flowSections = def.flows.map((f) => renderFlowSection(f, screensById, t)).join("\n");
+  const flowSections = def.flows.map((f) => renderFlowSection(f, screensById, entitiesById, t)).join("\n");
   const screenSections = def.screens
     .map((s) => renderScreenSection(s, flowsByScreen(s.id), t))
     .join("\n");
@@ -344,6 +449,8 @@ ${renderToc(def, t)}
 ${flowSections}
 <h2 id="screens">${esc(t.screensHeading)}</h2>
 ${screenSections}
+${renderDataCatalog(def, t)}
+${renderGlossary(def, entitiesById, t)}
 </main>
 <footer class="wf-doc-footer">${esc(t.footer)}</footer>
 </body>

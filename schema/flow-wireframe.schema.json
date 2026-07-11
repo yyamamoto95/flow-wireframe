@@ -50,6 +50,82 @@
       "items": {
         "$ref": "#/definitions/flow"
       }
+    },
+    "glossary": {
+      "type": "array",
+      "description": "ユビキタス言語の用語集（ことばの層）",
+      "items": {
+        "type": "object",
+        "required": [
+          "term",
+          "definition"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "term": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "entity": {
+            "type": "string",
+            "description": "対応するエンティティID（entities を参照）"
+          }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "ビジネス用語とテーブルの写像（データの層）。スキーマのSSOTは実装側にあり、ここはその写し",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "step.data から参照される一意なID"
+          },
+          "name": {
+            "type": "string",
+            "description": "ビジネス用語（ユビキタス言語）での名前"
+          },
+          "table": {
+            "type": "string",
+            "description": "物理テーブル名"
+          },
+          "note": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "物理カラム名"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "ビジネス上の呼び名"
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -553,6 +629,43 @@
               "result": {
                 "type": "string",
                 "description": "システムの応答・特記事項"
+              },
+              "data": {
+                "type": "array",
+                "description": "このステップでデータ（テーブル）がどう変わるか",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "entity",
+                    "change"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "entity": {
+                      "type": "string",
+                      "description": "entities のID"
+                    },
+                    "change": {
+                      "enum": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                      ]
+                    },
+                    "columns": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "影響するカラム名"
+                    },
+                    "note": {
+                      "type": "string",
+                      "description": "非エンジニア向けの補足"
+                    }
+                  }
+                }
               }
             },
             "oneOf": [
