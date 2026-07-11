@@ -40,6 +40,36 @@ import { renderHtml, validate } from "flow-wireframe";
 const html = renderHtml(definition); // 不正な定義は日本語のエラーで throw
 ```
 
+## どんな開発にも使える（非依存性の設計）
+
+「見える化ツール自体が特定の技術圏に閉じない」ことを設計目標にしている。
+
+| 軸 | 依存するか | 理由 |
+|----|-----------|------|
+| プロダクトの実装言語 | **しない** | 定義は JSON・出力は HTML。対象が Python / Ruby / Go / Java でも書く内容は変わらない |
+| 対象プロジェクトへの導入 | **しない** | `npx flow-wireframe build flow.json` を実行するだけ。対象プロジェクトに package.json・依存・設定ファイルは一切追加されない（Node は「生成時に使う道具」で、鉛筆と同じ扱い） |
+| 閲覧環境 | **しない** | 出力は JSなし・外部参照なしの単一 HTML。`file://` 直開き・社内 Wiki・メール添付・印刷で機能する |
+| UI ライブラリ / アーキテクチャ | **しない** | 描くのは「ふるまい」（どの画面で・何をすると・どうなるか）であり実装ではない。React でも Rails でも DDD でもレガシーでも同じ |
+| プラットフォーム | Web / モバイル / CLI | `layout: mobile / desktop / terminal`。UI を持たない処理は `process` ステップで表現 |
+| デザインツール | 競合しない | 忠実なビジュアルデザインは Figma 等に譲る（下記「設計方針」参照） |
+| AI エージェント | **しない**（どのエージェントでも） | 定義は JSON Schema で機械検証でき、出力は決定的。エージェントが定義を書き `check` で自己検証するループが、Claude / Cursor / Copilot / Codex のいずれでも成立する |
+
+### 非 Node プロジェクトでの使い方
+
+対象プロジェクトが何の言語でも、Node 18+ さえ入っていれば導入作業ゼロで使える。
+
+```bash
+cd your-python-project/
+npx flow-wireframe init docs/flow.json     # 雛形を作る
+npx flow-wireframe build docs/flow.json    # docs/flow.html が生成される
+```
+
+### AI エージェントに定義を書かせるレシピ
+
+1. ユーザーストーリー（Gherkin 等）と `$schema` の URL をエージェントに渡す
+2. 「screens と flows を書き、`npx flow-wireframe check` が通るまで修正せよ」と指示する
+3. 検証エラーは全件・日本語で返るため、エージェントは自律的に修正できる
+
 ## フレームワークとしての使い方（再現可能な運用プロセス）
 
 どのプロジェクトでも同じ手順で業務フローを見える化できるよう、運用を4ステップに固定する。
