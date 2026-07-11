@@ -7,43 +7,56 @@ export function buildCss(accent = "#2563eb"): string {
   return `
 :root {
   --accent: ${accent};
-  --ink: #1f2937;
-  --muted: #6b7280;
-  --line: #d1d5db;
-  --paper: #f8fafc;
-  --sketch: #9ca3af;
-  --good: #047857;
+  --ink: #232a31;          /* 製図インク: 青みの近黒 */
+  --muted: #5d6773;
+  --line: #d5dbe1;
+  --hairline: #e4e9ee;
+  --paper: #f3f5f7;        /* 方眼紙の地: クールグレー */
+  --surface: #ffffff;
+  --grid: rgba(35, 42, 49, .045);
+  --sketch: #9aa4ad;
+  --good: #0b7a58;
   --caution: #b45309;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--paper);
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    var(--paper);
+  background-size: 24px 24px, 24px 24px, auto;
   font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, system-ui, sans-serif;
-  line-height: 1.6;
+  line-height: 1.65;
+  font-feature-settings: "palt";
 }
-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
-h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48px; }
+main { max-width: 1080px; margin: 0 auto; padding: 0 20px 64px; }
+table { font-variant-numeric: tabular-nums; }
+h2 { font-size: 21px; letter-spacing: .02em; border-bottom: 1px solid var(--ink); padding-bottom: 8px; margin: 56px 0 20px; position: relative; }
+h2::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 56px; border-bottom: 3px solid var(--accent); }
+h3 { font-size: 16px; letter-spacing: .01em; }
 
-.wf-doc-header { background: var(--ink); color: #fff; padding: 28px 20px; }
-.wf-doc-header h1 { margin: 0 auto; max-width: 1080px; font-size: 24px; }
-.wf-doc-desc, .wf-doc-meta { max-width: 1080px; margin: 6px auto 0; opacity: .85; font-size: 13px; }
-.wf-doc-footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+/* 図面のタイトルブロック風ヘッダー */
+.wf-doc-header { max-width: 1080px; margin: 28px auto 8px; padding: 0 20px; }
+.wf-doc-header h1 { margin: 0; font-size: 27px; letter-spacing: .01em; line-height: 1.35; text-wrap: balance; border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 18px 2px 14px; }
+.wf-doc-desc { margin: 10px 2px 0; color: var(--muted); font-size: 13.5px; max-width: 72ch; }
+.wf-doc-meta { display: inline-block; margin: 12px 2px 0; font-size: 11.5px; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line); background: var(--surface); border-radius: 3px; padding: 3px 12px; }
+.wf-doc-footer { text-align: center; color: var(--muted); font-size: 11.5px; letter-spacing: .04em; padding: 28px 20px 36px; }
 
 /* 読み方・目次 */
-.wf-legend { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; margin-top: 24px; }
+.wf-legend { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 18px; margin-top: 24px; }
 .wf-legend summary { cursor: pointer; font-weight: 700; }
 .wf-legend li { margin: 6px 0; font-size: 14px; }
-.wf-toc { display: flex; gap: 32px; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px 20px; margin-top: 16px; }
+.wf-toc { display: flex; gap: 48px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 22px; margin-top: 14px; }
 .wf-toc h4 { margin: 8px 0 4px; }
 .wf-toc ol { margin: 0; padding-left: 20px; font-size: 14px; }
 .wf-toc a { color: var(--ink); text-decoration: none; }
 .wf-toc a:hover { color: var(--accent); }
 
 /* フロー */
-.wf-flow-section, .wf-screen-section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 20px 0; scroll-margin-top: 16px; }
-.wf-flow-id, .wf-screen-id { display: inline-block; background: var(--accent); color: #fff; border-radius: 4px; font-size: 12px; padding: 1px 8px; margin-right: 8px; vertical-align: 2px; }
+.wf-flow-section, .wf-screen-section { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px 22px; margin: 20px 0; scroll-margin-top: 16px; }
+.wf-flow-id, .wf-screen-id { display: inline-block; background: var(--accent); color: #fff; border-radius: 3px; font-size: 11.5px; letter-spacing: .05em; padding: 2px 9px; margin-right: 10px; vertical-align: 2px; font-variant-numeric: tabular-nums; }
 .wf-actor { float: right; font-size: 13px; font-weight: 400; color: var(--muted); }
 .wf-flow-desc { color: var(--muted); font-size: 14px; margin-top: 0; }
 .wf-strip { display: flex; align-items: flex-start; gap: 4px; overflow-x: auto; padding: 12px 4px 16px; }
@@ -102,13 +115,13 @@ h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48
 /* データカタログ・CRUDマトリクス・用語集 */
 .wf-crud-note { color: var(--muted); font-size: 13px; }
 .wf-crud-wrap { overflow-x: auto; }
-.wf-crud { border-collapse: collapse; background: #fff; font-size: 13px; }
+.wf-crud { border-collapse: collapse; background: var(--surface); font-size: 13px; }
 .wf-crud th, .wf-crud td { border: 1px solid var(--line); padding: 6px 12px; text-align: left; }
 .wf-crud td { text-align: center; min-width: 72px; }
 .wf-crud td .wf-data-chip { margin: 0 2px; padding: 1px 6px; }
 .wf-crud a { color: var(--ink); text-decoration: none; }
 .wf-crud a:hover { color: var(--accent); }
-.wf-entity { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 20px; margin: 16px 0; scroll-margin-top: 16px; }
+.wf-entity { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 22px; margin: 16px 0; scroll-margin-top: 16px; }
 .wf-entity:target { outline: 3px solid var(--accent); animation: wf-flash 1.2s ease-out 1; }
 .wf-entity h4 { margin: 4px 0 8px; font-size: 15px; }
 .wf-entity-table { margin-left: 10px; font-size: 12px; font-weight: 400; background: #f3f4f6; border: 1px solid var(--line); border-radius: 4px; padding: 1px 8px; }
@@ -116,7 +129,7 @@ h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48
 .wf-entity-cols th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 400; padding: 2px 14px 2px 0; border-bottom: 1px solid var(--line); }
 .wf-entity-cols td { padding: 3px 14px 3px 0; border-bottom: 1px dashed var(--line); }
 .wf-col-name { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
-.wf-glossary-section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 20px; }
+.wf-glossary-section { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 22px; }
 .wf-glossary { border-collapse: collapse; font-size: 14px; width: 100%; }
 .wf-glossary th { text-align: left; white-space: nowrap; padding: 8px 18px 8px 0; vertical-align: top; }
 .wf-glossary td { padding: 8px 12px 8px 0; border-bottom: 1px dashed var(--line); color: var(--ink); }
@@ -202,7 +215,6 @@ h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48
 
 @media print {
   body { background: #fff; }
-  .wf-doc-header { background: #fff; color: var(--ink); border-bottom: 3px solid var(--ink); }
   .wf-legend, .wf-toc { display: none; }
   .wf-flow-section, .wf-screen-section { break-inside: avoid; border: none; padding: 0; }
   .wf-strip { overflow: visible; flex-wrap: wrap; }

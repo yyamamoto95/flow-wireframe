@@ -1,6 +1,6 @@
 {
   "name": "flow-wireframe",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "業務フロー定義(JSON)から、非エンジニアにも読める自己完結型の静的HTMLワイヤーフレームを生成するライブラリ / CLI",
   "keywords": [
     "wireframe",
