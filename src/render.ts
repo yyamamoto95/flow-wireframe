@@ -237,7 +237,14 @@ function renderDataChips(
     .map((d) => {
       const entity = entitiesById.get(d.entity);
       const name = entity?.name ?? d.entity;
-      const title = d.note ?? (entity?.table ? `${t.tableWord}: ${entity.table}` : "");
+      const colLabel = (colName: string) =>
+        entity?.columns?.find((c) => c.name === colName)?.label ?? colName;
+      const titleLines = [
+        d.note,
+        entity?.table ? `${t.tableWord}: ${entity.table}` : "",
+        d.columns?.length ? `${t.columnWord}: ${d.columns.map(colLabel).join(", ")}` : "",
+      ].filter(Boolean);
+      const title = titleLines.join("\n");
       return `<a class="wf-data-chip wf-data-${d.change}" href="#entity-${esc(d.entity)}"${title ? ` title="${esc(title)}"` : ""}>${esc(t.changes[d.change])}: ${esc(name)}</a>`;
     })
     .join("");
@@ -373,16 +380,25 @@ function renderDataCatalog(def: FlowDefinition, t: Locale): string {
   if (entities.length === 0) return "";
   const usedBy = (entityId: string) =>
     def.flows.filter((f) => f.steps.some((st) => (st.data ?? []).some((d) => d.entity === entityId)));
+  /** カラム→ユースケースの逆引き: そのカラムを data.columns で明示しているフロー */
+  const columnUsedBy = (entityId: string, colName: string) =>
+    def.flows.filter((f) =>
+      f.steps.some((st) =>
+        (st.data ?? []).some((d) => d.entity === entityId && (d.columns ?? []).includes(colName))
+      )
+    );
   const cards = entities
     .map((e) => {
       const cols = (e.columns ?? [])
-        .map(
-          (c) =>
-            `<tr><td class="wf-col-name">${esc(c.name)}</td><td>${esc(c.label ?? "")}</td><td>${esc(c.note ?? "")}</td></tr>`
-        )
+        .map((c) => {
+          const flowTags = columnUsedBy(e.id, c.name)
+            .map((f) => `<a class="wf-tag" href="#flow-${esc(f.id)}" title="${esc(f.name)}">${esc(f.id)}</a>`)
+            .join(" ");
+          return `<tr><td class="wf-col-name">${esc(c.name)}</td><td>${esc(c.label ?? "")}</td><td>${esc(c.note ?? "")}</td><td class="wf-col-flows">${flowTags}</td></tr>`;
+        })
         .join("");
       const colTable = cols
-        ? `<table class="wf-entity-cols"><thead><tr><th>${esc(t.columnWord)}</th><th>${esc(t.columnBizName)}</th><th></th></tr></thead><tbody>${cols}</tbody></table>`
+        ? `<table class="wf-entity-cols"><thead><tr><th>${esc(t.columnWord)}</th><th>${esc(t.columnBizName)}</th><th></th><th>${esc(t.appearsIn)}</th></tr></thead><tbody>${cols}</tbody></table>`
         : "";
       const flows = usedBy(e.id)
         .map((f) => `<a class="wf-tag" href="#flow-${esc(f.id)}">${esc(f.id)}</a>`)

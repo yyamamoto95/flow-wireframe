@@ -223,6 +223,21 @@ describe("v0.5 ことば・データの層", () => {
     expect(html).toContain('href="#entity-record"');
   });
 
+  it("チップの title に影響カラムの呼び名が入る（ユースケース→カラムの順方向）", () => {
+    const html = renderHtml(defWithData());
+    expect(html).toContain("カラム: 金額");
+  });
+
+  it("データカタログのカラム表からフローへ逆引きできる（カラム→ユースケース）", () => {
+    const html = renderHtml(defWithData());
+    // amount カラムの行に、それを touch する F-1 へのリンクが付く
+    const amountRow = html.match(/<tr><td class="wf-col-name">amount<\/td>.*?<\/tr>/s)?.[0] ?? "";
+    expect(amountRow).toContain('href="#flow-F-1"');
+    // 明示されていない category_id の行にはリンクが付かない
+    const catRow = html.match(/<tr><td class="wf-col-name">category_id<\/td>.*?<\/tr>/s)?.[0] ?? "";
+    expect(catRow).not.toContain("wf-tag");
+  });
+
   it("CRUDマトリクスとデータカタログ・用語集が生成される", () => {
     const html = renderHtml(defWithData());
     expect(html).toContain("CRUD マトリクス");
