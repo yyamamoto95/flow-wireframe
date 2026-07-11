@@ -174,6 +174,29 @@ describe("v0.2 の汎用化機能", () => {
   });
 });
 
+describe("v0.3 の汎用化機能（CLIドメイン）", () => {
+  it("layout: terminal は端末枠として描画される", () => {
+    const def = minimalDef();
+    def.screens[0].layout = "terminal";
+    const html = renderHtml(def);
+    expect(html).toContain("wf-terminal");
+    expect(html).toContain("wf-terminal-bar");
+  });
+
+  it("console 部品はコマンド・プロンプト・出力を区別して描画する", () => {
+    const def = minimalDef();
+    def.screens[0].elements.push({
+      type: "console",
+      lines: ["$ pnpm create dev-framework", "? プロダクト名: 家計簿", "✅ 導入完了"],
+    });
+    const html = renderHtml(def);
+    expect(html).toContain("wf-console-cmd");
+    expect(html).toContain("wf-console-prompt");
+    expect(html).toContain("wf-console-out");
+    expect(html).toContain("$ pnpm create dev-framework");
+  });
+});
+
 describe("JSON Schema", () => {
   it("schema が有効な JSON で、TypeScript の element type 一覧と一致する", () => {
     const schema = JSON.parse(
@@ -186,7 +209,7 @@ describe("JSON Schema", () => {
     // render.ts の switch が扱う全部品タイプ（types.ts の ScreenElement と対応）
     const implemented = [
       "header", "text", "input", "button", "link", "list", "card",
-      "chart", "image", "badge", "choice", "nav", "divider",
+      "chart", "image", "badge", "choice", "nav", "divider", "console",
     ];
     expect([...schemaTypes].sort()).toEqual([...implemented].sort());
   });

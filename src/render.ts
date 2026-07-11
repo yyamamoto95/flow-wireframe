@@ -137,6 +137,20 @@ function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean
         .join("");
       return `<div class="wf-el wf-nav">${items}${mark}</div>`;
     }
+    case "console": {
+      const label = el.label ? `<div class="wf-console-label">${esc(el.label)}${mark}</div>` : mark;
+      const lines = el.lines
+        .map((line) => {
+          const cls = line.startsWith("$ ")
+            ? "wf-console-cmd"
+            : line.startsWith("? ")
+              ? "wf-console-prompt"
+              : "wf-console-out";
+          return `<span class="${cls}">${esc(line)}</span>`;
+        })
+        .join("\n");
+      return `<div class="wf-el wf-console">${label}<pre>${lines}</pre></div>`;
+    }
     case "divider":
       return `<hr class="wf-el wf-divider" />`;
   }
@@ -155,11 +169,14 @@ function renderScreenFrame(screen: Screen, interactive = true): string {
       ? `<ol class="wf-notes">${c.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ol>`
       : "";
   const desktop = screen.layout === "desktop";
+  const terminal = screen.layout === "terminal";
   const chrome = desktop
     ? `<div class="wf-browser-bar"><span></span><span></span><span></span><i>${esc(screen.name)}</i></div>`
-    : "";
+    : terminal
+      ? `<div class="wf-terminal-bar"><span></span><span></span><span></span><i>${esc(screen.name)}</i></div>`
+      : "";
   return (
-    `<div class="wf-frame-wrap${desktop ? " wf-desktop" : ""}">` +
+    `<div class="wf-frame-wrap${desktop ? " wf-desktop" : ""}${terminal ? " wf-terminal" : ""}">` +
     `<div class="wf-frame">${chrome}${body}</div>` +
     notes +
     `</div>`
@@ -183,9 +200,9 @@ function renderScreenSection(screen: Screen, usedBy: Flow[]): string {
 
 /** フロー内で使うミニチュア画面（実物のワイヤーフレームを縮小表示） */
 function renderThumb(screen: Screen, stepNo: number): string {
-  const desktop = screen.layout === "desktop";
+  const wide = screen.layout === "desktop" || screen.layout === "terminal";
   return (
-    `<a class="wf-thumb${desktop ? " wf-thumb-desktop" : ""}" href="#screen-${esc(screen.id)}" title="クリックで画面の詳細へ">` +
+    `<a class="wf-thumb${wide ? " wf-thumb-desktop" : ""}" href="#screen-${esc(screen.id)}" title="クリックで画面の詳細へ">` +
     `<span class="wf-thumb-no">${stepNo}</span>` +
     `<span class="wf-thumb-scale">${renderScreenFrame(screen, false)}</span>` +
     `<span class="wf-thumb-name">${esc(screen.name)}</span>` +
@@ -266,6 +283,7 @@ function renderLegend(): string {
     `<li><strong>青い枠のボタン・リンク</strong>はクリックできるホットスポットです。クリックすると遷移先の画面へ移動し、移動先が一瞬ハイライトされます。</li>` +
     `<li><strong>⚙ の角丸ボックス</strong>は画面を持たない処理（バッチ・自動化など）を表します。下のラベルは処理の主体です。</li>` +
     `<li><strong>↗</strong> は外部サービスへの遷移（このワイヤーフレームの範囲外）を表します。</li>` +
+    `<li><strong>黒い枠</strong>は端末（CLI）画面です。<code>$</code> はコマンド、<code>?</code> は対話プロンプトを表します。</li>` +
     `<li>①②… の印は画面下の注釈と対応します。</li>` +
     `</ul></details>`
   );

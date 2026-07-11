@@ -58,6 +58,25 @@ h2 { border-bottom: 3px solid var(--accent); padding-bottom: 6px; margin-top: 48
 .wf-thumb-name { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; }
 .wf-thumb:hover .wf-thumb-name { color: var(--accent); }
 
+/* 端末（CLI）枠 */
+.wf-terminal .wf-frame { width: 560px; border-radius: 10px; background: #1e293b; color: #e2e8f0; }
+.wf-terminal-bar { display: flex; align-items: center; gap: 5px; background: #0f172a; margin: -14px -12px 6px; padding: 7px 12px; border-radius: 8px 8px 0 0; }
+.wf-terminal-bar span { width: 9px; height: 9px; border-radius: 50%; background: #475569; }
+.wf-terminal-bar i { flex: 1; font-style: normal; font-size: 10px; color: #94a3b8; text-align: center; }
+.wf-terminal .wf-header { color: #e2e8f0; border-bottom-color: #475569; }
+.wf-terminal .wf-text { color: #cbd5e1; }
+.wf-terminal .wf-muted { color: #94a3b8; }
+.wf-terminal .wf-console { border-color: #475569; }
+
+/* コンソールブロック（全レイアウトで使用可） */
+.wf-console { border: 1.5px solid var(--line); border-radius: 8px; background: #1e293b; padding: 8px 10px; overflow-x: auto; }
+.wf-console-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.wf-terminal .wf-console-label { color: #94a3b8; }
+.wf-console pre { margin: 0; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 11px; line-height: 1.7; color: #e2e8f0; display: flex; flex-direction: column; }
+.wf-console-cmd { color: #7dd3fc; font-weight: 700; }
+.wf-console-prompt { color: #fbbf24; }
+.wf-console-out { color: #cbd5e1; }
+
 /* デスクトップ枠のミニチュア */
 .wf-thumb-desktop { width: 216px; }
 .wf-thumb-desktop .wf-thumb-scale .wf-frame-wrap { transform: scale(.36); width: 560px; }

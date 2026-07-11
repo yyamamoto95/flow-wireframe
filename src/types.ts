@@ -111,8 +111,20 @@ export interface DividerElement extends ElementBase {
   type: "divider";
 }
 
+/**
+ * コンソール出力・コマンド・コードのブロック（等幅表示）。
+ * CLI ツールの対話や、画面内のコード片の表現に使う。
+ * 行頭が "$ " の行はコマンド、"? " の行は対話プロンプトとして強調される。
+ */
+export interface ConsoleElement extends ElementBase {
+  type: "console";
+  label?: string;
+  lines: string[];
+}
+
 export type ScreenElement =
   | HeaderElement
+  | ConsoleElement
   | TextElement
   | InputElement
   | ButtonElement
@@ -133,8 +145,8 @@ export interface Screen {
   name: string;
   /** 画面の目的や状態の説明 */
   note?: string;
-  /** 画面の枠。mobile=スマホ枠(320px) / desktop=ブラウザ枠(560px)。省略時は mobile */
-  layout?: "mobile" | "desktop";
+  /** 画面の枠。mobile=スマホ枠(320px) / desktop=ブラウザ枠(560px) / terminal=端末枠(560px・CLI用)。省略時は mobile */
+  layout?: "mobile" | "desktop" | "terminal";
   elements: ScreenElement[];
 }
 
