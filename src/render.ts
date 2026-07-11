@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import { validate } from "./validate";
 import { buildCss } from "./theme";
+import { LOCALES, type Locale } from "./i18n";
 
 const CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
 
@@ -23,8 +24,8 @@ export function escapeHtml(text: string): string {
 const esc = escapeHtml;
 
 /** goto 付き部品をアンカーとして描く際の共通属性 */
-function gotoAttrs(goto: string | undefined): string {
-  return goto ? ` href="#screen-${esc(goto)}" title="クリックで「${esc(goto)}」へ移動"` : "";
+function gotoAttrs(goto: string | undefined, t: Locale): string {
+  return goto ? ` href="#screen-${esc(goto)}" title="${esc(t.gotoTitle(goto))}"` : "";
 }
 
 interface NoteCollector {
@@ -46,7 +47,7 @@ function createNoteCollector(): NoteCollector {
   };
 }
 
-function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean): string {
+function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean, t: Locale): string {
   const mark = c.mark(el.note);
   switch (el.type) {
     case "header":
@@ -64,14 +65,14 @@ function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean
       const variant = el.variant ?? "primary";
       const hot = interactive && el.goto;
       const tag = hot ? "a" : "span";
-      const ext = el.external ? `<span class="wf-external" title="外部サービスへ移動">↗</span>` : "";
-      return `<${tag} class="wf-el wf-button wf-button-${variant}${hot ? " wf-hotspot" : ""}"${hot ? gotoAttrs(el.goto) : ""}>${esc(el.label)}${ext}${mark}</${tag}>`;
+      const ext = el.external ? `<span class="wf-external" title="${esc(t.externalTitle)}">↗</span>` : "";
+      return `<${tag} class="wf-el wf-button wf-button-${variant}${hot ? " wf-hotspot" : ""}"${hot ? gotoAttrs(el.goto, t) : ""}>${esc(el.label)}${ext}${mark}</${tag}>`;
     }
     case "link": {
       const hot = interactive && el.goto;
       const tag = hot ? "a" : "span";
-      const ext = el.external ? `<span class="wf-external" title="外部サービスへ移動">↗</span>` : "";
-      return `<${tag} class="wf-el wf-link${hot ? " wf-hotspot" : ""}"${hot ? gotoAttrs(el.goto) : ""}>${esc(el.label)}${ext}${mark}</${tag}>`;
+      const ext = el.external ? `<span class="wf-external" title="${esc(t.externalTitle)}">↗</span>` : "";
+      return `<${tag} class="wf-el wf-link${hot ? " wf-hotspot" : ""}"${hot ? gotoAttrs(el.goto, t) : ""}>${esc(el.label)}${ext}${mark}</${tag}>`;
     }
     case "list": {
       const label = el.label ? `<div class="wf-list-label">${esc(el.label)}${mark}</div>` : mark;
@@ -132,7 +133,7 @@ function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean
           const hot = interactive && goto;
           const tag = hot ? "a" : "span";
           const cls = `wf-nav-item${label === el.selected ? " wf-selected" : ""}${hot ? " wf-nav-hotspot" : ""}`;
-          return `<${tag} class="${cls}"${hot ? gotoAttrs(goto) : ""}>${esc(label)}</${tag}>`;
+          return `<${tag} class="${cls}"${hot ? gotoAttrs(goto, t) : ""}>${esc(label)}</${tag}>`;
         })
         .join("");
       return `<div class="wf-el wf-nav">${items}${mark}</div>`;
@@ -161,9 +162,9 @@ function renderElement(el: ScreenElement, c: NoteCollector, interactive: boolean
  * interactive=false はミニチュア用: <a> の入れ子（HTML では不正）を避けるため
  * ホットスポットを描かず、注釈リストも省略する。
  */
-function renderScreenFrame(screen: Screen, interactive = true): string {
+function renderScreenFrame(screen: Screen, t: Locale, interactive = true): string {
   const c = interactive ? createNoteCollector() : { notes: [], mark: () => "" };
-  const body = screen.elements.map((el) => renderElement(el, c, interactive)).join("\n");
+  const body = screen.elements.map((el) => renderElement(el, c, interactive, t)).join("\n");
   const notes =
     interactive && c.notes.length > 0
       ? `<ol class="wf-notes">${c.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ol>`
@@ -184,7 +185,7 @@ function renderScreenFrame(screen: Screen, interactive = true): string {
 }
 
 /** 画面カタログの 1 セクション */
-function renderScreenSection(screen: Screen, usedBy: Flow[]): string {
+function renderScreenSection(screen: Screen, usedBy: Flow[], t: Locale): string {
   const flows = usedBy
     .map((f) => `<a class="wf-tag" href="#flow-${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a>`)
     .join(" ");
@@ -192,19 +193,19 @@ function renderScreenSection(screen: Screen, usedBy: Flow[]): string {
     `<section class="wf-screen-section" id="screen-${esc(screen.id)}">` +
     `<h3><span class="wf-screen-id">${esc(screen.id)}</span>${esc(screen.name)}</h3>` +
     (screen.note ? `<p class="wf-screen-note">${esc(screen.note)}</p>` : "") +
-    (flows ? `<p class="wf-screen-flows">登場するフロー: ${flows}</p>` : "") +
-    renderScreenFrame(screen) +
+    (flows ? `<p class="wf-screen-flows">${esc(t.appearsIn)}: ${flows}</p>` : "") +
+    renderScreenFrame(screen, t) +
     `</section>`
   );
 }
 
 /** フロー内で使うミニチュア画面（実物のワイヤーフレームを縮小表示） */
-function renderThumb(screen: Screen, stepNo: number): string {
+function renderThumb(screen: Screen, stepNo: number, t: Locale): string {
   const wide = screen.layout === "desktop" || screen.layout === "terminal";
   return (
-    `<a class="wf-thumb${wide ? " wf-thumb-desktop" : ""}" href="#screen-${esc(screen.id)}" title="クリックで画面の詳細へ">` +
+    `<a class="wf-thumb${wide ? " wf-thumb-desktop" : ""}" href="#screen-${esc(screen.id)}" title="${esc(t.thumbTitle)}">` +
     `<span class="wf-thumb-no">${stepNo}</span>` +
-    `<span class="wf-thumb-scale">${renderScreenFrame(screen, false)}</span>` +
+    `<span class="wf-thumb-scale">${renderScreenFrame(screen, t, false)}</span>` +
     `<span class="wf-thumb-name">${esc(screen.name)}</span>` +
     `</a>`
   );
@@ -223,31 +224,31 @@ function renderProcessNode(step: FlowStep, stepNo: number, defaultActor?: string
   );
 }
 
-function renderScenario(flow: Flow): string {
+function renderScenario(flow: Flow, t: Locale): string {
   if (!flow.scenario) return "";
-  const row = (kind: string, jp: string, lines: string[]) =>
+  const row = (kind: string, label: string, lines: string[]) =>
     lines
       .map(
         (line, i) =>
-          `<tr class="wf-gherkin-${kind}"><th>${i === 0 ? jp : "かつ"}</th><td>${esc(line)}</td></tr>`
+          `<tr class="wf-gherkin-${kind}"><th>${i === 0 ? esc(label) : esc(t.and)}</th><td>${esc(line)}</td></tr>`
       )
       .join("");
   return (
-    `<details class="wf-gherkin" open><summary>ふるまい（Given / When / Then）</summary><table>` +
-    row("given", "前提", flow.scenario.given) +
-    row("when", "操作", flow.scenario.when) +
-    row("then", "結果", flow.scenario.then) +
+    `<details class="wf-gherkin" open><summary>${esc(t.behavior)}</summary><table>` +
+    row("given", t.given, flow.scenario.given) +
+    row("when", t.when, flow.scenario.when) +
+    row("then", t.then, flow.scenario.then) +
     `</table></details>`
   );
 }
 
-function renderFlowSection(flow: Flow, screensById: Map<string, Screen>): string {
+function renderFlowSection(flow: Flow, screensById: Map<string, Screen>, t: Locale): string {
   const strip = flow.steps
     .map((step, i) => {
       let node = "";
       if (step.screen) {
         const screen = screensById.get(step.screen);
-        node = screen ? renderThumb(screen, i + 1) : "";
+        node = screen ? renderThumb(screen, i + 1, t) : "";
       } else if (step.process) {
         node = renderProcessNode(step, i + 1, flow.actor);
       }
@@ -269,27 +270,17 @@ function renderFlowSection(flow: Flow, screensById: Map<string, Screen>): string
     `</h3>` +
     (flow.description ? `<p class="wf-flow-desc">${esc(flow.description)}</p>` : "") +
     `<div class="wf-strip">${strip}</div>` +
-    renderScenario(flow) +
+    renderScenario(flow, t) +
     `</section>`
   );
 }
 
-function renderLegend(): string {
-  return (
-    `<details class="wf-legend"><summary>この資料の読み方</summary><ul>` +
-    `<li><strong>業務フロー</strong>: 画面の縮小図と矢印で「誰が・どの画面で・何をすると・どうなるか」を表します。矢印の上が<strong>操作</strong>、下が<strong>システムの応答</strong>です。</li>` +
-    `<li><strong>ふるまい表</strong>: 各フローの下にある「前提・操作・結果」の表は、開発で使うテストシナリオ（Gherkin）と1対1で対応します。</li>` +
-    `<li><strong>画面カタログ</strong>: フロー中の縮小図をクリックすると、その画面の実寸ワイヤーフレームへ移動します。</li>` +
-    `<li><strong>青い枠のボタン・リンク</strong>はクリックできるホットスポットです。クリックすると遷移先の画面へ移動し、移動先が一瞬ハイライトされます。</li>` +
-    `<li><strong>⚙ の角丸ボックス</strong>は画面を持たない処理（バッチ・自動化など）を表します。下のラベルは処理の主体です。</li>` +
-    `<li><strong>↗</strong> は外部サービスへの遷移（このワイヤーフレームの範囲外）を表します。</li>` +
-    `<li><strong>黒い枠</strong>は端末（CLI）画面です。<code>$</code> はコマンド、<code>?</code> は対話プロンプトを表します。</li>` +
-    `<li>①②… の印は画面下の注釈と対応します。</li>` +
-    `</ul></details>`
-  );
+function renderLegend(t: Locale): string {
+  const items = t.legendItems.map((item) => `<li>${item}</li>`).join("");
+  return `<details class="wf-legend"><summary>${esc(t.legendTitle)}</summary><ul>${items}</ul></details>`;
 }
 
-function renderToc(def: FlowDefinition): string {
+function renderToc(def: FlowDefinition, t: Locale): string {
   const flowItems = def.flows
     .map(
       (f) =>
@@ -300,8 +291,8 @@ function renderToc(def: FlowDefinition): string {
     .map((s) => `<li><a href="#screen-${esc(s.id)}">${esc(s.name)}</a></li>`)
     .join("");
   return (
-    `<nav class="wf-toc"><div><h4>業務フロー</h4><ol>${flowItems}</ol></div>` +
-    `<div><h4>画面カタログ</h4><ol>${screenItems}</ol></div></nav>`
+    `<nav class="wf-toc"><div><h4>${esc(t.flowsHeading)}</h4><ol>${flowItems}</ol></div>` +
+    `<div><h4>${esc(t.screensHeading)}</h4><ol>${screenItems}</ol></div></nav>`
   );
 }
 
@@ -315,24 +306,25 @@ export function renderHtml(def: FlowDefinition, options: RenderOptions = {}): st
     throw new Error(`フロー定義にエラーがあります:\n- ${result.errors.join("\n- ")}`);
   }
 
+  const t = LOCALES[def.lang ?? "ja"];
   const screensById = new Map(def.screens.map((s) => [s.id, s]));
   const flowsByScreen = (screenId: string) =>
     def.flows.filter((f) => f.steps.some((st) => st.screen === screenId));
 
-  const flowSections = def.flows.map((f) => renderFlowSection(f, screensById)).join("\n");
+  const flowSections = def.flows.map((f) => renderFlowSection(f, screensById, t)).join("\n");
   const screenSections = def.screens
-    .map((s) => renderScreenSection(s, flowsByScreen(s.id)))
+    .map((s) => renderScreenSection(s, flowsByScreen(s.id), t))
     .join("\n");
 
   const meta = [
-    def.version ? `版: ${esc(def.version)}` : "",
-    options.generatedAt ? `生成: ${esc(options.generatedAt)}` : "",
+    def.version ? `${esc(t.version)}: ${esc(def.version)}` : "",
+    options.generatedAt ? `${esc(t.generated)}: ${esc(options.generatedAt)}` : "",
   ]
     .filter(Boolean)
-    .join(" ／ ");
+    .join(t.metaSeparator);
 
   return `<!DOCTYPE html>
-<html lang="ja">
+<html lang="${t.htmlLang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -346,14 +338,14 @@ ${def.description ? `<p class="wf-doc-desc">${esc(def.description)}</p>` : ""}
 ${meta ? `<p class="wf-doc-meta">${meta}</p>` : ""}
 </header>
 <main>
-${renderLegend()}
-${renderToc(def)}
-<h2 id="flows">業務フロー</h2>
+${renderLegend(t)}
+${renderToc(def, t)}
+<h2 id="flows">${esc(t.flowsHeading)}</h2>
 ${flowSections}
-<h2 id="screens">画面カタログ</h2>
+<h2 id="screens">${esc(t.screensHeading)}</h2>
 ${screenSections}
 </main>
-<footer class="wf-doc-footer">Generated by flow-wireframe — 定義(JSON)と出力(HTML)は1対1で対応します</footer>
+<footer class="wf-doc-footer">${esc(t.footer)}</footer>
 </body>
 </html>
 `;

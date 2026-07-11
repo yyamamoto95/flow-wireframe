@@ -197,6 +197,39 @@ describe("v0.3 の汎用化機能（CLIドメイン）", () => {
   });
 });
 
+describe("i18n（lang: ja / en）", () => {
+  it("既定は日本語で描画される", () => {
+    const html = renderHtml(minimalDef());
+    expect(html).toContain('<html lang="ja">');
+    expect(html).toContain("この資料の読み方");
+    expect(html).toContain(">前提<");
+    expect(html).toContain(">業務フロー</h2>");
+  });
+
+  it("lang: en は定型文言のみ英語になり、書き手のコンテンツは変わらない", () => {
+    const def = minimalDef();
+    def.lang = "en";
+    const html = renderHtml(def);
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain("How to read this document");
+    expect(html).toContain(">Given<");
+    expect(html).toContain(">User flows</h2>");
+    expect(html).toContain(">Screen catalog</h2>");
+    // 定型文言に日本語が残らない
+    expect(html).not.toContain("この資料の読み方");
+    expect(html).not.toContain(">前提<");
+    // 書き手が書いた日本語コンテンツはそのまま
+    expect(html).toContain("画面A");
+    expect(html).toContain("Bに遷移する");
+  });
+
+  it("ja と en のロケールは同じキー構造を持つ（文言の追加漏れガード）", async () => {
+    const { LOCALES } = await import("../i18n");
+    expect(Object.keys(LOCALES.en).sort()).toEqual(Object.keys(LOCALES.ja).sort());
+    expect(LOCALES.en.legendItems.length).toBe(LOCALES.ja.legendItems.length);
+  });
+});
+
 describe("JSON Schema", () => {
   it("schema が有効な JSON で、TypeScript の element type 一覧と一致する", () => {
     const schema = JSON.parse(

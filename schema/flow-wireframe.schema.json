@@ -14,6 +14,13 @@
     "$schema": {
       "type": "string"
     },
+    "lang": {
+      "enum": [
+        "ja",
+        "en"
+      ],
+      "description": "出力ドキュメントの定型文言の言語（凡例・見出し・Gherkin行ラベル等）。省略時は日本語"
+    },
     "title": {
       "type": "string",
       "description": "ドキュメント名"

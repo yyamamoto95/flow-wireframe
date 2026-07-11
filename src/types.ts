@@ -191,6 +191,8 @@ export interface Flow {
 export interface FlowDefinition {
   /** エディタ補完用の JSON Schema 参照。レンダリングには影響しない */
   $schema?: string;
+  /** 出力ドキュメントの定型文言の言語。省略時は日本語 */
+  lang?: "ja" | "en";
   title: string;
   description?: string;
   /** 定義自体のバージョン。出力 HTML に表示される */
